@@ -35,13 +35,19 @@ impl From<serde_json::Value> for Event {
                 .expect("not a string");
             let body = value.get("body").expect("unable to get body").to_owned();
 
-            match event_type {
-                "Domains::SurveyDesign::Survey::Created" => DomainEvent::Survey(Survey::Created(
-                    serde_json::from_value(body).expect("unable to parse SurveyCreatedBody"),
-                )),
-                "Domains::SurveyDesign::SurveyCaptureLayout::Generated" => {
-                    DomainEvent::SurveyCaptureLayout(SurveyCaptureLayout::Generated)
-                }
+            let (aggregate_type, event_type) = parse_event_type(&event_type);
+
+            match aggregate_type {
+                "Survey" => DomainEvent::Survey(match event_type {
+                    "Created" => Survey::Created(
+                        serde_json::from_value(body).expect("unable to parse SurveyCreatedBody"),
+                    ),
+                    _ => Survey::UnknownEvent,
+                }),
+                "SurveyCaptureLayout" => DomainEvent::SurveyCaptureLayout(match event_type {
+                    "Generated" => SurveyCaptureLayout::Generated,
+                    _ => SurveyCaptureLayout::UnknownEvent,
+                }),
                 _ => DomainEvent::UnknownAggregate,
             }
         };
@@ -57,4 +63,17 @@ impl From<serde_json::Value> for Event {
             body: value.get("body").expect("unable to get body").to_owned(),
         }
     }
+}
+
+fn parse_event_type(event_type: &str) -> (&str, &str) {
+    // Domains::SurveyDesign::Survey::Created
+    let mut e = event_type.split("::");
+    e.next().unwrap(); // Domains
+    e.next().unwrap(); // SurveyDesign
+    (
+        // Survey
+        e.next().unwrap(),
+        // Created
+        e.next().unwrap(),
+    )
 }

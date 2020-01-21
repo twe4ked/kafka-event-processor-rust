@@ -9,11 +9,13 @@ impl event_processor::Processor<events::Event> for Processor {
                 events::Survey::Created(body) => {
                     dbg!(body);
                 }
+                events::Survey::UnknownEvent => {}
             },
             events::DomainEvent::SurveyCaptureLayout(domain_event) => match domain_event {
                 events::SurveyCaptureLayout::Generated => {
                     dbg!(event);
                 }
+                events::SurveyCaptureLayout::UnknownEvent => {}
             },
             _ => {
                 dbg!("not handled");
