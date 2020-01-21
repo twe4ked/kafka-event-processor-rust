@@ -1,9 +1,17 @@
+mod participant;
+mod response;
 mod survey;
 mod survey_capture_layout;
+mod survey_period;
+mod survey_question;
 
+pub use participant::*;
+pub use response::*;
 use serde::Deserialize;
 pub use survey::*;
 pub use survey_capture_layout::*;
+pub use survey_period::*;
+pub use survey_question::*;
 
 #[derive(Debug, Deserialize)]
 pub struct LocalizedText {
@@ -15,6 +23,10 @@ pub struct LocalizedText {
 pub enum DomainEvent {
     Survey(Survey),
     SurveyCaptureLayout(SurveyCaptureLayout),
+    SurveyQuestion(SurveyQuestion),
+    SurveyPeriod(SurveyPeriod),
+    Participant(Participant),
+    Response(Response),
     UnknownAggregate,
 }
 
@@ -41,13 +53,34 @@ impl From<serde_json::Value> for Event {
                     "Created" => Survey::Created(
                         serde_json::from_value(body).expect("unable to parse SurveyCreatedBody"),
                     ),
-                    _ => Survey::UnknownEvent,
+                    _ => panic!("{}:{}", aggregate_type, event_type),
+                }),
+                "SurveyQuestion" => DomainEvent::SurveyQuestion(match event_type {
+                    "AddedToSurvey" => SurveyQuestion::AddedToSurvey,
+                    "QuestionTypeChanged" => SurveyQuestion::QuestionTypeChanged,
+                    "SelectOptionAdded" => SurveyQuestion::QuestionTypeChanged,
+                    "SelectOptionRenamed" => SurveyQuestion::SelectOptionRenamed,
+                    _ => panic!("{}:{}", aggregate_type, event_type),
+                }),
+                "SurveyPeriod" => DomainEvent::SurveyPeriod(match event_type {
+                    "Launched" => SurveyPeriod::Launched,
+                    _ => panic!("{}:{}", aggregate_type, event_type),
                 }),
                 "SurveyCaptureLayout" => DomainEvent::SurveyCaptureLayout(match event_type {
                     "Generated" => SurveyCaptureLayout::Generated,
                     _ => SurveyCaptureLayout::UnknownEvent,
                 }),
-                _ => DomainEvent::UnknownAggregate,
+                "Participant" => DomainEvent::Participant(match event_type {
+                    "Invited" => Participant::Invited,
+                    _ => panic!("{}:{}", aggregate_type, event_type),
+                }),
+                "Response" => DomainEvent::Response(match event_type {
+                    "Started" => Response::Started,
+                    "RatingQuestionAnswered" => Response::RatingQuestionAnswered,
+                    "Submitted" => Response::Submitted,
+                    _ => panic!("{}:{}", aggregate_type, event_type),
+                }),
+                _ => panic!("{}:{}", aggregate_type, event_type),
             }
         };
 
