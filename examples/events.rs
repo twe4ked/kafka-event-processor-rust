@@ -65,8 +65,11 @@ impl From<serde_json::Value> for Event {
     }
 }
 
+/// Example:
+///
+///     Input: Domains::SurveyDesign::Survey::Created
+///     Output: (Survey, Created)
 fn parse_event_type(event_type: &str) -> (&str, &str) {
-    // Domains::SurveyDesign::Survey::Created
     let mut e = event_type.split("::");
     e.next().unwrap(); // Domains
     e.next().unwrap(); // SurveyDesign
