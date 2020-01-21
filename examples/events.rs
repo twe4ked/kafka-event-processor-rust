@@ -33,15 +33,12 @@ impl From<serde_json::Value> for Event {
                 .expect("unable to get event_type")
                 .as_str()
                 .expect("not a string");
+            let body = value.get("body").expect("unable to get body").to_owned();
 
             match event_type {
-                "Domains::SurveyDesign::Survey::Created" => {
-                    let body: SurveyCreatedBody = serde_json::from_value(
-                        value.get("body").expect("unable to get body").to_owned(),
-                    )
-                    .expect("unable to parse SurveyCreatedBody");
-                    DomainEvent::Survey(Survey::Created(body))
-                }
+                "Domains::SurveyDesign::Survey::Created" => DomainEvent::Survey(Survey::Created(
+                    serde_json::from_value(body).expect("unable to parse SurveyCreatedBody"),
+                )),
                 "Domains::SurveyDesign::SurveyCaptureLayout::Generated" => {
                     DomainEvent::SurveyCaptureLayout(SurveyCaptureLayout::Generated)
                 }
