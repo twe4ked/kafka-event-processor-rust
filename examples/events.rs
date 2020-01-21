@@ -49,38 +49,17 @@ impl From<serde_json::Value> for Event {
             let (aggregate_type, event_type) = parse_event_type(&event_type);
 
             match aggregate_type {
-                "Survey" => DomainEvent::Survey(match event_type {
-                    "Created" => Survey::Created(
-                        serde_json::from_value(body).expect("unable to parse SurveyCreatedBody"),
-                    ),
-                    _ => panic!("{}:{}", aggregate_type, event_type),
-                }),
-                "SurveyQuestion" => DomainEvent::SurveyQuestion(match event_type {
-                    "AddedToSurvey" => SurveyQuestion::AddedToSurvey,
-                    "QuestionTypeChanged" => SurveyQuestion::QuestionTypeChanged,
-                    "SelectOptionAdded" => SurveyQuestion::QuestionTypeChanged,
-                    "SelectOptionRenamed" => SurveyQuestion::SelectOptionRenamed,
-                    _ => panic!("{}:{}", aggregate_type, event_type),
-                }),
-                "SurveyPeriod" => DomainEvent::SurveyPeriod(match event_type {
-                    "Launched" => SurveyPeriod::Launched,
-                    _ => panic!("{}:{}", aggregate_type, event_type),
-                }),
-                "SurveyCaptureLayout" => DomainEvent::SurveyCaptureLayout(match event_type {
-                    "Generated" => SurveyCaptureLayout::Generated,
-                    _ => SurveyCaptureLayout::UnknownEvent,
-                }),
-                "Participant" => DomainEvent::Participant(match event_type {
-                    "Invited" => Participant::Invited,
-                    _ => panic!("{}:{}", aggregate_type, event_type),
-                }),
-                "Response" => DomainEvent::Response(match event_type {
-                    "Started" => Response::Started,
-                    "RatingQuestionAnswered" => Response::RatingQuestionAnswered,
-                    "Submitted" => Response::Submitted,
-                    _ => panic!("{}:{}", aggregate_type, event_type),
-                }),
-                _ => panic!("{}:{}", aggregate_type, event_type),
+                "Survey" => DomainEvent::Survey(Survey::build(event_type, body)),
+                "SurveyQuestion" => {
+                    DomainEvent::SurveyQuestion(SurveyQuestion::build(event_type, body))
+                }
+                "SurveyPeriod" => DomainEvent::SurveyPeriod(SurveyPeriod::build(event_type, body)),
+                "SurveyCaptureLayout" => {
+                    DomainEvent::SurveyCaptureLayout(SurveyCaptureLayout::build(event_type, body))
+                }
+                "Participant" => DomainEvent::Participant(Participant::build(event_type, body)),
+                "Response" => DomainEvent::Response(Response::build(event_type, body)),
+                _ => DomainEvent::UnknownAggregate,
             }
         };
 
