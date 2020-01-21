@@ -22,7 +22,6 @@ pub enum DomainEvent {
 pub struct Event {
     pub aggregate_id: String,
     pub domain_event: DomainEvent,
-    pub body: serde_json::Value,
 }
 
 impl From<serde_json::Value> for Event {
@@ -52,15 +51,16 @@ impl From<serde_json::Value> for Event {
             }
         };
 
+        let aggregate_id = value
+            .get("aggregate_id")
+            .expect("unable to get aggregate_id")
+            .as_str()
+            .expect("not a string")
+            .to_string();
+
         Event {
-            aggregate_id: value
-                .get("aggregate_id")
-                .expect("unable to get aggregate_id")
-                .as_str()
-                .expect("not a string")
-                .to_string(),
-            domain_event: domain_event,
-            body: value.get("body").expect("unable to get body").to_owned(),
+            aggregate_id,
+            domain_event,
         }
     }
 }
