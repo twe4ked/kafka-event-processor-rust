@@ -1,13 +1,27 @@
 use kafka::consumer::{Consumer, FetchOffset, GroupOffsetStorage};
 use kafka::error::Error as KafkaError;
 
-pub fn run(broker: String, topic: String) {
-    if let Err(e) = consume_messages(vec![broker], topic) {
+pub fn run<T>(broker: String, topic: String, event_processor: T)
+where
+    T: EventProcessor,
+{
+    if let Err(e) = consume_messages(vec![broker], topic, event_processor) {
         println!("Failed consuming messages: {}", e);
     }
 }
 
-fn consume_messages(brokers: Vec<String>, topic: String) -> Result<(), KafkaError> {
+pub trait EventProcessor {
+    fn process(&self, value: serde_json::Value);
+}
+
+fn consume_messages<T>(
+    brokers: Vec<String>,
+    topic: String,
+    event_processor: T,
+) -> Result<(), KafkaError>
+where
+    T: EventProcessor,
+{
     let mut con = Consumer::from_hosts(brokers)
         .with_topic(topic)
         .with_fallback_offset(FetchOffset::Earliest)
@@ -24,11 +38,10 @@ fn consume_messages(brokers: Vec<String>, topic: String) -> Result<(), KafkaErro
 
         for ms in mss.iter() {
             for m in ms.messages() {
-                print!("{}:{}@{}: ", ms.topic(), ms.partition(), m.offset);
+                println!("{}:{}@{}", ms.topic(), ms.partition(), m.offset);
                 let value = std::str::from_utf8(m.value).expect("invalid UTF-8");
                 let value: serde_json::Value = serde_json::from_str(&value).unwrap();
-                dbg!(&value);
-                print!("\n");
+                event_processor.process(value);
             }
             let _ = con.consume_messageset(ms);
         }
