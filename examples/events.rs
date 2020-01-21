@@ -80,3 +80,24 @@ fn parse_event_type(event_type: &str) -> (&str, &str) {
         e.next().unwrap(),
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn event_parsing() {
+        let data = r#"
+            {
+                "event_type": "Domains::SurveyDesign::Survey::Created",
+                "aggregate_id": "b918c780-1ec8-0138-3ca8-2cde48001122",
+                "body": {
+                    "account_id": "b918c780-1ec8-0138-3ca8-2cde48001122",
+                    "created_at": "TODO",
+                    "name": []
+                }
+            }"#;
+        let value: serde_json::Value = serde_json::from_str(&data).unwrap();
+        let event = Event::from(value);
+    }
+}
