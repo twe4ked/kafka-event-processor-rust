@@ -1,7 +1,23 @@
 mod events {
+    use serde::Deserialize;
+    use uuid::Uuid;
+
+    #[derive(Debug, Deserialize)]
+    pub struct SurveyCreatedBody {
+        account_id: Uuid,
+        created_at: String,
+        name: Vec<LocalizedText>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct LocalizedText {
+        locale: String,
+        text: String,
+    }
+
     #[derive(Debug)]
     pub enum Survey {
-        Created, // Domains::SurveyDesign::Survey::Created
+        Created(SurveyCreatedBody), // Domains::SurveyDesign::Survey::Created
     }
 
     #[derive(Debug)]
@@ -14,18 +30,6 @@ mod events {
         Survey(Survey),
         SurveyCaptureLayout(SurveyCaptureLayout),
         Unknown,
-    }
-
-    impl From<&str> for DomainEvent {
-        fn from(value: &str) -> Self {
-            match value {
-                "Domains::SurveyDesign::Survey::Created" => DomainEvent::Survey(Survey::Created),
-                "Domains::SurveyDesign::SurveyCaptureLayout::Generated" => {
-                    DomainEvent::SurveyCaptureLayout(SurveyCaptureLayout::Generated)
-                }
-                _ => DomainEvent::Unknown,
-            }
-        }
     }
 
     #[derive(Debug)]
@@ -43,7 +47,20 @@ mod events {
                     .expect("unable to get event_type")
                     .as_str()
                     .expect("not a string");
-                DomainEvent::from(event_type)
+
+                match event_type {
+                    "Domains::SurveyDesign::Survey::Created" => {
+                        let body: SurveyCreatedBody = serde_json::from_value(
+                            value.get("body").expect("unable to get body").to_owned(),
+                        )
+                        .expect("unable to parse SurveyCreatedBody");
+                        DomainEvent::Survey(Survey::Created(body))
+                    }
+                    "Domains::SurveyDesign::SurveyCaptureLayout::Generated" => {
+                        DomainEvent::SurveyCaptureLayout(SurveyCaptureLayout::Generated)
+                    }
+                    _ => DomainEvent::Unknown,
+                }
             };
 
             Event {
@@ -66,8 +83,8 @@ impl event_processor::Processor<events::Event> for Processor {
     fn process(&self, event: events::Event) {
         match &event.domain_event {
             events::DomainEvent::Survey(domain_event) => match domain_event {
-                events::Survey::Created => {
-                    dbg!(event);
+                events::Survey::Created(body) => {
+                    dbg!(body);
                 }
             },
             events::DomainEvent::SurveyCaptureLayout(domain_event) => match domain_event {
