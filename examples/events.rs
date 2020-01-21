@@ -15,7 +15,7 @@ pub struct LocalizedText {
 pub enum DomainEvent {
     Survey(Survey),
     SurveyCaptureLayout(SurveyCaptureLayout),
-    Unknown,
+    UnknownAggregate,
 }
 
 #[derive(Debug)]
@@ -42,7 +42,7 @@ impl From<serde_json::Value> for Event {
                 "Domains::SurveyDesign::SurveyCaptureLayout::Generated" => {
                     DomainEvent::SurveyCaptureLayout(SurveyCaptureLayout::Generated)
                 }
-                _ => DomainEvent::Unknown,
+                _ => DomainEvent::UnknownAggregate,
             }
         };
 
