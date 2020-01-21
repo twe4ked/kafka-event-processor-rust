@@ -24,13 +24,11 @@ fn consume_messages(brokers: Vec<String>, topic: String) -> Result<(), KafkaErro
 
         for ms in mss.iter() {
             for m in ms.messages() {
-                println!(
-                    "{}:{}@{}: {:?}",
-                    ms.topic(),
-                    ms.partition(),
-                    m.offset,
-                    m.value
-                );
+                print!("{}:{}@{}: ", ms.topic(), ms.partition(), m.offset);
+                let value = std::str::from_utf8(m.value).expect("invalid UTF-8");
+                let value: serde_json::Value = serde_json::from_str(&value).unwrap();
+                dbg!(&value);
+                print!("\n");
             }
             let _ = con.consume_messageset(ms);
         }
