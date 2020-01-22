@@ -82,15 +82,8 @@ impl From<serde_json::Value> for Event {
 ///     Input: Domains::SurveyDesign::Survey::Created
 ///     Output: (Survey, Created)
 fn parse_event_type(event_type: &str) -> (&str, &str) {
-    let mut e = event_type.split("::");
-    e.next().unwrap(); // Domains
-    e.next().unwrap(); // SurveyDesign
-    (
-        // Survey
-        e.next().unwrap(),
-        // Created
-        e.next().unwrap(),
-    )
+    let mut e = event_type.split("::").skip(2); // Domains::SurveyDesign
+    (e.next().unwrap(), e.next().unwrap()) // (Survey, Created)
 }
 
 #[cfg(test)]
