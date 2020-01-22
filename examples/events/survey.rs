@@ -12,7 +12,7 @@ pub struct SurveyCreatedBody {
 
 #[derive(Debug)]
 pub enum Survey {
-    Created(SurveyCreatedBody), // Domains::SurveyDesign::Survey::Created
+    Created(SurveyCreatedBody),
     UnknownEvent,
 }
 
