@@ -30,15 +30,9 @@ where
 {
     let span = span!(Level::TRACE, "consume");
     let _enter = span.enter();
-
     event!(Level::DEBUG, "Consuming messages");
 
-    let mut con = Consumer::from_hosts(brokers)
-        .with_topic(topic)
-        .with_fallback_offset(FetchOffset::Earliest)
-        .with_offset_storage(GroupOffsetStorage::Kafka)
-        .create()
-        .expect("unable to connect");
+    let mut con = connect(brokers, topic).expect("unable to connect");
 
     loop {
         let span = span!(Level::TRACE, "loop");
@@ -71,4 +65,12 @@ where
         // NOTE: messages must be marked and commited as consumed to ensure only once delivery.
         con.commit_consumed().expect("unable to commit consumed");
     }
+}
+
+fn connect(brokers: Vec<String>, topic: String) -> Result<Consumer, KafkaError> {
+    Consumer::from_hosts(brokers)
+        .with_topic(topic)
+        .with_fallback_offset(FetchOffset::Earliest)
+        .with_offset_storage(GroupOffsetStorage::Kafka)
+        .create()
 }
