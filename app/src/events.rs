@@ -7,11 +7,12 @@ mod survey_question;
 
 pub use participant::*;
 pub use response::*;
-use serde::Deserialize;
 pub use survey::*;
 pub use survey_capture_layout::*;
 pub use survey_period::*;
 pub use survey_question::*;
+
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct LocalizedText {
